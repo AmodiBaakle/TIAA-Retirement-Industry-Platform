@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Dashboard</title>
+  <!-- Bootstrap CSS -->
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+  <style>
+    /* Custom CSS for centering buttons */
+    .center-buttons {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+      .carousel-item {
+        text-align: center;
+      }
+      .carousel-item img {
+        max-height: 200px;
+        margin: auto;
+      }
+      .scheme-tile {
+        background-color: #f8f9fa;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        padding: 20px;
+        margin-bottom: 20px;
+      }
+      .invest-button {
+        text-align: center;
+        margin-top: 10px;
+      }
+  </style>
+</head>
+
+<body>
+  <!-- Navigation Bar -->
+  <nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <a class="navbar-brand" href="#">TARA</a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav"
+      aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarNav">
+      <ul class="navbar-nav">
+        <li class="nav-item">
+          <a class="nav-link" href="/profile">Profile</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="/dashboard">Dashboard</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="/expense">Expense</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="/wallet">Wallet</a>
+        </li>
+      </ul>
+    </div>
+  </nav>
+
+  <div class="container mt-4">
+    <div class="row">
+      <!-- Left Column with Carousel -->
+      <div class="col-md-6">
+        <h4>Current Investments</h4>
+        <div class="row">
+          <div class="col">
+            
+            <div id="schemeCarousel" class="carousel slide" data-ride="carousel">
+              <div class="carousel-inner">
+                <ul style='list-style-type:none;'>
+                  {% for inv in Current_data %}
+                  <li>
+                <div class="carousel-item py-5 active align-items-center justify-content-center" style='height:300px'>
+                  
+                    <h5>{{ inv.name }}</h5>
+                    <p>Investment Amount: Rs. {{ inv.inv_amt }}</p>
+                    <p>Policy Term: {{ inv.tenure }}</p>
+                    <p>Investment Date: {{ inv.id }}</p>
+                  
+                </div>
+              </li>
+              {% endfor %}
+            </ul>
+               
+              </div>
+              <!-- Controls -->
+              <a class="carousel-control-prev" href="#schemeCarousel" role="button" data-slide="prev">
+                <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                <span class="sr-only">Previous</span>
+              </a>
+              <a class="carousel-control-next" href="#schemeCarousel" role="button" data-slide="next">
+                <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                <span class="sr-only">Next</span>
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Column with Form -->
+      <div class="col-md-6">
+        <h4>Add Investment</h4>
+        <form method='post'>
+          {% csrf_token %}
+          <div class="form-group">
+            <label for="schemeName">Scheme Name</label>
+            <select class="form-control" name='scheme_name' id="schemeName">
+              <option>Tata AIA Fortune Maxima </option>
+              <option>Bajaj Allianz Life LongLife Goal </option>
+              <option>HDFC Life Click 2 Wealth </option>
+              <option>Max Life Online Savings Plan </option>
+              <option>Edelweiss Life Tokio Wealth Secure Plus </option>
+              <option>ICICI Prudential Signature </option>
+              <option>Tata AIA Life Guaranteed Monthly Income Plan</option>
+              <option>Bajaj Allianz Pension Guaranteed Pension Plan</option>
+              <option>Max Life Forever Young Pension Plan</option>
+              <option>ICICI Pru Easy Retirement Plan</option>
+              <option>LIC Jeevan Akshay 7 Pension Plan </option>
+              <option>LIC New Jeevan Shanti Pension Plan </option>
+              <option>Max Life Guaranteed Lifetime Income Pension Plan </option>
+              <option>Aditya Birla Sun Life Empower Pension Plan </option>
+              <option>IndiaFirst Life Guaranteed Annuity Plan </option>
+              <option>Kotak Premier Pension Plan </option>
+              <option>SBI Life Saral Retirement Saver </option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="investmentAmount">Investment Amount</label>
+            <input type="text" name ='investment_amount' class="form-control" id="investmentAmount">
+          </div>
+          <div class="form-group">
+            <label for="rateOfInterest">Rate of Interest</label>
+            <input type="text" name = 'roi' class="form-control" id="rateOfInterest">
+          </div>
+          <button type="submit" class="btn btn-primary">Submit</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="container mt-4">
+    <p style = 'color:#f4ac40'><h4>Best Suited For You</h4></p>
+    <div class="row">
+      <div class="col">
+        <ul class="list-inline" style='list-style-type:none;'>
+          {% for inv in Recommendation.Salary %}
+        <li>
+          <h5>{{inv.scheme_name}}</h5>
+                <p>Minimum Entry Age: {{inv.min_entry_age}}</p>
+                <p>Maximum Entry Age: {{inv.max_entry_age}}</p>
+                <p>Policy Term: {{inv.policy_term}}</p>
+                <p>Minimum Investment: Rs. {{inv.minimum_investment}}</p>
+                <p>Return Rate: {{inv.return_rate}}%</p>
+                <div class="invest-button">
+                  <a href="https://yourinvestmenturl.com" class="btn btn-primary">Invest</a>
+                </div>
+              </li>
+              {% endfor %}
+        </ul>
+      </div>
+    </div>
+
+    <p style = 'color:#f4ac40'><h4>People Also Invested In </h4></p>
+    <div class="row">
+      <div class="col">
+        <ul class="list-inline" style='list-style-type:none;'>
+          {% for inv in Recommendation.Occupation %}
+        <li>
+          <h5>{{inv.scheme_name}}</h5>
+                <p>Minimum Entry Age: {{inv.min_entry_age}}</p>
+                <p>Maximum Entry Age: {{inv.max_entry_age}}</p>
+                <p>Policy Term: {{inv.policy_term}}</p>
+                <p>Minimum Investment: Rs. {{inv.minimum_investment}}</p>
+                <p>Return Rate: {{inv.return_rate}}%</p>
+                <div class="invest-button">
+                  <a href="https://yourinvestmenturl.com" class="btn btn-primary">Invest</a>
+                </div>
+              </li>
+              {% endfor %}
+        </ul>
+      </div>
+    </div>
+
+    <p style = 'color:#f4ac40'><h4>Recommended for your Age</h4></p>
+    <div class="row">
+      <div class="col">
+        <ul class="list-inline" style='list-style-type:none;'>
+          {% for inv in Recommendation.Age %}
+        <li>
+          <h5>{{inv.scheme_name}}</h5>
+                <p>Minimum Entry Age: {{inv.min_entry_age}}</p>
+                <p>Maximum Entry Age: {{inv.max_entry_age}}</p>
+                <p>Policy Term: {{inv.policy_term}}</p>
+                <p>Minimum Investment: Rs. {{inv.minimum_investment}}</p>
+                <p>Return Rate: {{inv.return_rate}}%</p>
+                <div class="invest-button">
+                  <a href="https://yourinvestmenturl.com" class="btn btn-primary">Invest</a>
+                </div>
+              </li>
+              {% endfor %}
+        </ul>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Bootstrap JS, Popper.js, and jQuery -->
+  <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.10.2/dist/umd/popper.min.js"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+
+</html>
+ 

@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Welcome</title>
+  <!-- Bootstrap CSS -->
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+  <style>
+    /* Custom CSS for centering buttons */
+    .center-buttons {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- Navigation Bar -->
+  <nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <a class="navbar-brand" href="#">TARA</a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav"
+      aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarNav">
+      <ul class="navbar-nav">
+        <li class="nav-item">
+          <a class="nav-link" href="/profile">Profile</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="/dashboard">Dashboard</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="/expense">Expenses</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="/wallet">Wallet</a>
+        </li>
+      </ul>
+    </div>
+  </nav>
+
+  <div class="container">
+    <div class="row">
+      <!-- Image Column -->
+      <div style="background-color: #f4ac40;  margin-left: -190px; width:60vw">
+        <img src="/static/hero_spot.jpg" class="img-fluid" style="margin-top: 100px; margin-left:50px; width: 90%;" alt="Sample Image">
+      </div>
+      <!-- Text and Buttons Column -->
+      <div class="col-md-4 d-flex align-items-center justify-content-center" style="height: 93vh;">
+        <div class="text-center">
+          <h1>TARA</h1>
+          <h4>Secure Your Future!</h4>
+          <form method='post'>
+            {% csrf_token %}
+            <div class="col-md-12 mb-3">
+              <button name='register' type="submit" class="btn btn-primary btn-block">Register</button>
+            </div>
+            <div class="col-md-12">
+              <button name='login' type="submit" class="btn btn-secondary btn-block">Login</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+
+  <!-- Bootstrap JS, Popper.js, and jQuery -->
+  <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.10.2/dist/umd/popper.min.js"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+
+</html>
