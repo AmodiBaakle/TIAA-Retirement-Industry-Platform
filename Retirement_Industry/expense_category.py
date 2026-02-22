@@ -4,13 +4,13 @@ from sklearn.preprocessing import LabelEncoder
 import os
 import pandas as pd
 
-expense_df = pd.read_csv(os.getcwd() + '\\static\\expense_dataset_extended.csv')
+expense_df = pd.read_csv(os.getcwd() + '/static/expense_dataset_extended.csv')
 
 label_encoder_category = LabelEncoder()
 label_encoder_name = LabelEncoder()
 expense_df['encoded_category'] = label_encoder_category.fit_transform(expense_df['expense_category'])
 expense_df['encoded_name'] = label_encoder_name.fit_transform(expense_df['expense_name'])
-loaded_model = joblib.load(os.getcwd() + '\\static\\expense_category_model.pkl') 
+loaded_model = joblib.load(os.getcwd() + '/static/expense_category_model.pkl') 
 
 
 

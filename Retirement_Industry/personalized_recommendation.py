@@ -6,7 +6,7 @@ import os
 from datetime import datetime
 import random
 
-schemes_data = pd.read_csv(os.getcwd()+'\\static\\Schemes.csv', encoding='unicode_escape')
+schemes_data = pd.read_csv(os.getcwd()+'/static/Schemes.csv', encoding='unicode_escape')
 
 features = schemes_data[['Entry_Age_min', 'Enty_Age_max', 'Exit_Age', 'Minimum_amount_to_Invest _yearly', 'Return_rate']]
 target = schemes_data['Pension_Plans_in_India']
