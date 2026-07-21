@@ -1,0 +1,60 @@
+{% extends 'base_auth.html' %}
+{% block page_title %}Create account{% endblock %}
+{% block content %}
+<div class="card wide">
+  <div class="brand"><span class="logo">🪙</span><span>{{ app_name }}</span></div>
+  <h2>Build your financial profile</h2>
+  <p class="lead">The more we know, the smarter your nudges and portfolio get.</p>
+
+  {% if error %}<div class="error">{{ error }}</div>{% endif %}
+
+  <form method="post" action="/enter_info">
+    {% csrf_token %}
+
+    <div class="step-title">① Account</div>
+    <div class="row c2">
+      <div class="field"><label>Full name</label><input name="name" value="{{ data.name }}" required></div>
+      <div class="field"><label>Email</label><input type="email" name="mail" value="{{ data.mail }}" required></div>
+    </div>
+    <div class="field"><label>Password</label><input type="password" name="password" required></div>
+
+    <div class="step-title">② About you</div>
+    <div class="row c3">
+      <div class="field"><label>Age</label><input type="number" name="age" value="{{ data.age }}" placeholder="28" required></div>
+      <div class="field"><label>City</label><input name="city" value="{{ data.city }}" placeholder="Mumbai"></div>
+      <div class="field"><label>Profession</label><input name="occupation" value="{{ data.occupation }}" placeholder="Software Engineer"></div>
+    </div>
+    <div class="row c3">
+      <div class="field"><label>Gender</label>
+        <select name="gender"><option value="">Select</option><option>Female</option><option>Male</option><option>Other</option></select></div>
+      <div class="field"><label>Marital status</label>
+        <select name="marital_status"><option>Single</option><option>Married</option></select></div>
+      <div class="field"><label>Work class</label>
+        <select name="work_class"><option>Private</option><option>Government</option><option>Self-employed</option><option>Student</option></select></div>
+    </div>
+
+    <div class="step-title">③ Finances (monthly, ₹)</div>
+    <div class="row c3">
+      <div class="field"><label>Salary</label><input type="number" name="salary" value="{{ data.salary }}" placeholder="80000" required></div>
+      <div class="field"><label>Fixed expenses</label><input type="number" name="fixed_expenses" value="{{ data.fixed_expenses }}" placeholder="35000"></div>
+      <div class="field"><label>Savings goal</label><input type="number" name="monthly_savings_goal" value="{{ data.monthly_savings_goal }}" placeholder="15000"></div>
+    </div>
+    <div class="row c3">
+      <div class="field"><label>Existing investments</label><input type="number" name="existing_investments" value="{{ data.existing_investments }}" placeholder="200000"></div>
+      <div class="field"><label>Debt</label><input type="number" name="debt" value="{{ data.debt }}" placeholder="0"></div>
+      <div class="field"><label>Risk appetite</label>
+        <select name="risk_appetite"><option>Low</option><option selected>Medium</option><option>High</option></select></div>
+    </div>
+
+    <div class="step-title">④ Your first goal <span style="font-weight:400;text-transform:none;color:var(--muted)">(optional)</span></div>
+    <div class="row c3">
+      <div class="field"><label>Goal</label><input name="goal_name" placeholder="MacBook Pro"></div>
+      <div class="field"><label>Target amount (₹)</label><input type="number" name="goal_amount" placeholder="180000"></div>
+      <div class="field"><label>In how many months?</label><input type="number" name="goal_months" placeholder="10"></div>
+    </div>
+
+    <button class="btn btn-primary" type="submit" style="margin-top:10px">Create my account →</button>
+  </form>
+  <p class="alt">Already have an account? <a href="/login">Log in</a></p>
+</div>
+{% endblock %}

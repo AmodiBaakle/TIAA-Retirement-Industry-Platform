@@ -1,33 +1,69 @@
-import joblib
-import numpy as np
-from sklearn.preprocessing import LabelEncoder
+"""Expense categoriser (Daily / Basic / Luxury / Entertainment).
+
+Real merchant names are matched with keyword rules first (the ML model was
+trained on a tiny synthetic vocabulary that doesn't include names like Swiggy
+or Amazon). For names that ARE in the training vocabulary we fall back to the
+RandomForest model; otherwise we default to 'Basic'. Robust to a missing or
+incompatible model file - it will simply lean on the rules.
+"""
 import os
+
+import joblib
 import pandas as pd
+from sklearn.preprocessing import LabelEncoder
 
-expense_df = pd.read_csv(os.getcwd() + '/static/expense_dataset_extended.csv')
+_STATIC = os.path.join(os.getcwd(), 'static')
 
-label_encoder_category = LabelEncoder()
-label_encoder_name = LabelEncoder()
-expense_df['encoded_category'] = label_encoder_category.fit_transform(expense_df['expense_category'])
-expense_df['encoded_name'] = label_encoder_name.fit_transform(expense_df['expense_name'])
-loaded_model = joblib.load(os.getcwd() + '/static/expense_category_model.pkl') 
+try:
+    _df = pd.read_csv(os.path.join(_STATIC, 'expense_dataset_extended.csv'))
+    _cat_enc = LabelEncoder().fit(_df['expense_category'])
+    _name_enc = LabelEncoder().fit(_df['expense_name'])
+    _known_names = set(_df['expense_name'])
+except Exception:
+    _cat_enc = _name_enc = None
+    _known_names = set()
 
+try:
+    _model = joblib.load(os.path.join(_STATIC, 'expense_category_model.pkl'))
+except Exception:
+    _model = None
+
+# keyword -> category for real-world merchant names used across the app
+_RULES = [
+    (('grocer', 'bigbasket', 'more supermarket', 'milk', 'supermarket', 'kirana',
+      'vegetable', 'pharmacy', 'medical', 'metro', 'fuel', 'petrol', 'electricity',
+      'rent', 'utilit', 'recharge'), 'Daily'),
+    (('swiggy', 'zomato', 'restaurant', 'dining', 'cafe', 'coffee', 'starbucks',
+      'food', 'uber', 'ola', 'stationary', 'insurance', 'education'), 'Basic'),
+    (('amazon', 'flipkart', 'myntra', 'nykaa', 'jewell', 'electronics', 'apple',
+      'shopping', 'gadget'), 'Luxury'),
+    (('netflix', 'spotify', 'prime', 'hotstar', 'pvr', 'bookmyshow', 'movie',
+      'game', 'cinema', 'disney'), 'Entertainment'),
+]
+
+
+def _rule_category(name):
+    low = (name or '').lower()
+    for keys, cat in _RULES:
+        if any(k in low for k in keys):
+            return cat
+    return None
 
 
 def main(name, amount):
-    encoded_name = LabelEncoder().fit_transform([name])[0]
-    predicted_category = loaded_model.predict([[encoded_name, amount]])
-    predicted_category_label = label_encoder_category.inverse_transform(predicted_category)
-    print(f"Predicted Expense Category: {predicted_category_label}")
-
-    if 'Groceries' in name:
-        return 'Daily'
-    elif 'Jeweller' in name:
-        return 'Luxury'
-    elif 'Stationary' in name:
-        return 'Basic' 
-    return predicted_category_label[0]
+    cat = _rule_category(name)
+    if cat:
+        return cat
+    if _model is not None and name in _known_names:
+        try:
+            enc = _name_enc.transform([name])[0]
+            pred = _model.predict([[enc, amount]])
+            return _cat_enc.inverse_transform(pred)[0]
+        except Exception:
+            pass
+    return 'Basic'
 
 
 if __name__ == '__main__':
-    print(main('Groceries', 379))
+    for n in ['Swiggy', 'Amazon', 'BigBasket Groceries', 'Netflix', 'Unknown Shop']:
+        print(n, '->', main(n, 500))

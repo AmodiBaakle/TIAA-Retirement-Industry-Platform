@@ -12,13 +12,20 @@ features = schemes_data[['Entry_Age_min', 'Enty_Age_max', 'Exit_Age', 'Minimum_a
 target = schemes_data['Pension_Plans_in_India']
 
 knn_model = NearestNeighbors(n_neighbors=5)
-knn_model.fit(features, target)
+# fit on raw values (no column names) so querying with a plain list doesn't warn
+knn_model.fit(features.values, target)
 
 def calculate_age(birthdate):
-    birthdate = datetime.strptime(birthdate, '%Y-%m-%d')
+    """Accepts either a plain age ('28') or a birthdate ('1998-04-12')."""
+    birthdate = str(birthdate).strip()
+    if birthdate.isdigit():
+        return int(birthdate)
+    try:
+        bd = datetime.strptime(birthdate, '%Y-%m-%d')
+    except ValueError:
+        return 30  # sensible default when the value is unparseable
     current_date = datetime.now()
-    age = current_date.year - birthdate.year - ((current_date.month, current_date.day) < (birthdate.month, birthdate.day))
-    return age
+    return current_date.year - bd.year - ((current_date.month, current_date.day) < (bd.month, bd.day))
 
 def recommend_schemes(age, salary, occupation, work_class, gender):
     query = [[age, salary, occupation, work_class, gender]]
@@ -57,8 +64,6 @@ def main(pid):
         'Salary': recommended_salary_based,
         'Occupation': recommended_occupation_based
     }
-    # Print or return the output in the specified format
-    print(output)
     return output
 
 

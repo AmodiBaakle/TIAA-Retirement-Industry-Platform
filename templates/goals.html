@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+{% block page_title %}Goals{% endblock %}
+{% block heading %}🎯 Goals{% endblock %}
+{% block subheading %}Saving ₹{{ capacity }}/month · every expense is measured against these.{% endblock %}
+{% block content %}
+
+<div class="grid" style="grid-template-columns:1fr 320px">
+  <div>
+    <div class="grid g2">
+      {% for g in goals %}
+      <div class="card" style="display:flex;gap:18px;align-items:center">
+        <div class="ring" style="--val:{{ g.pct }};--c:{% if g.complete %}var(--success){% else %}var(--primary){% endif %}">
+          <div class="inner"><b>{{ g.pct }}%</b><small>{{ g.emoji }}</small></div>
+        </div>
+        <div style="flex:1">
+          <b style="font-size:16px">{{ g.emoji }} {{ g.name }}</b>
+          <div class="chip {% if g.tier == 'major' %}info{% endif %}" style="margin:6px 0">{{ g.tier }}</div>
+          <div class="muted" style="font-size:13.5px">₹{{ g.saved_amount }} of ₹{{ g.target_amount }}</div>
+          <div class="muted" style="font-size:13.5px">₹{{ g.remaining }} to go
+            {% if g.complete %}· <span style="color:var(--success)">Complete! 🎉</span>
+            {% else %}· ~{{ g.projected_months }} mo at this rate{% endif %}</div>
+        </div>
+      </div>
+      {% empty %}
+      <div class="card empty" style="grid-column:1/-1"><div class="big">🎯</div><p>No goals yet — add your first on the right.</p></div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <div class="card" style="align-self:start">
+    <h3>➕ New goal</h3>
+    <p class="card-sub">What are you saving for?</p>
+    <form method="post" action="/goals">
+      {% csrf_token %}
+      <div class="field"><label>Goal name</label><input name="name" placeholder="Japan Trip" required></div>
+      <div class="field"><label>Emoji</label><input name="emoji" placeholder="✈️" maxlength="4"></div>
+      <div class="field"><label>Target amount (₹)</label><input type="number" name="target_amount" placeholder="250000" required></div>
+      <div class="field"><label>Target months</label><input type="number" name="target_months" placeholder="18"></div>
+      <div class="field"><label>Already saved (₹)</label><input type="number" name="saved_amount" placeholder="0"></div>
+      <div class="field"><label>Priority</label>
+        <select name="tier"><option value="major">Major</option><option value="minor">Minor</option></select></div>
+      <button class="btn btn-primary btn-block" type="submit">Add goal</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

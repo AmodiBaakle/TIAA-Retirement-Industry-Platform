@@ -15,6 +15,11 @@ from pathlib import Path
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+# Application branding. Change this in one place to rename the app everywhere
+# (page titles, navbar, hero, etc.). Exposed to all templates as {{ app_name }}
+# via Retirement_Industry.context_processors.branding.
+APP_NAME = 'TARA'
+
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
@@ -25,7 +30,7 @@ SECRET_KEY = 'django-insecure-x3rrz)v&%f3^!hw#t63+yu!15%za+l7)nge%g4!)(smia$f!04
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ["tara.echopalette.in"]
+ALLOWED_HOSTS = ["tara.echopalette.in", "localhost", "127.0.0.1", "0.0.0.0"]
 
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
@@ -65,6 +70,8 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'Retirement_Industry.context_processors.branding',
+                'Retirement_Industry.context_processors.user_shell',
             ],
         },
     },

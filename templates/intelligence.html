@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+{% block page_title %}Intelligence{% endblock %}
+{% block heading %}🔍 Expense Explorer AI{% endblock %}
+{% block subheading %}Patterns hiding in your spending, surfaced automatically.{% endblock %}
+{% block content %}
+
+{% if not has_data %}
+  <div class="card empty"><div class="big">🔍</div><h3>Nothing to analyse yet</h3>
+    <p class="muted mb">Add a few expenses or load sample data to unlock insights.</p>
+    <a class="btn btn-primary" href="/load_sample">✨ Load sample data</a></div>
+{% else %}
+
+  <!-- Insights -->
+  <div class="grid g2">
+    {% for i in insights %}
+    <div class="card tone-{{ i.tone }}" style="display:flex;gap:14px;align-items:flex-start">
+      <div style="font-size:24px">{{ i.icon }}</div>
+      <div><b>{{ i.title }}</b><div class="muted" style="font-size:13.5px;margin-top:3px">{{ i.detail }}</div></div>
+    </div>
+    {% endfor %}
+  </div>
+
+  <div class="section-title">Where your money goes</div>
+  <div class="grid g2">
+    <div class="card"><h3>Spending by category</h3><p class="card-sub">Share of total outflow.</p>
+      <canvas id="catChart" height="220"></canvas></div>
+    <div class="card"><h3>Spending by day of week</h3><p class="card-sub">Which days run hot.</p>
+      <canvas id="dowChart" height="220"></canvas></div>
+  </div>
+  <div class="grid g2 mt">
+    <div class="card"><h3>Monthly trend</h3><p class="card-sub">Total spend per month.</p>
+      <canvas id="trendChart" height="200"></canvas></div>
+    <div class="card"><h3>Collection source</h3><p class="card-sub">How spending was captured.</p>
+      <canvas id="srcChart" height="200"></canvas></div>
+  </div>
+
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+{% if has_data %}
+<script>
+  const C = JSON.parse('{{ charts_json|escapejs }}');
+  const FONT = {family:'Inter'}; Chart.defaults.font.family='Inter'; Chart.defaults.color='#7a7f96';
+  const PAL = ['#6C5CE7','#10b981','#f59e0b','#3b82f6','#ef4444','#14b8a6'];
+  const DOW = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+
+  new Chart(catChart,{type:'doughnut',data:{labels:Object.keys(C.category),
+    datasets:[{data:Object.values(C.category),backgroundColor:PAL,borderWidth:0}]},
+    options:{plugins:{legend:{position:'bottom'}},cutout:'62%'}});
+
+  new Chart(dowChart,{type:'bar',data:{labels:DOW,
+    datasets:[{data:C.day_of_week,backgroundColor:'#6C5CE7',borderRadius:8}]},
+    options:{plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,grid:{color:'#f0f1f7'}},x:{grid:{display:false}}}}});
+
+  new Chart(trendChart,{type:'line',data:{labels:Object.keys(C.monthly_trend),
+    datasets:[{data:Object.values(C.monthly_trend),borderColor:'#10b981',backgroundColor:'rgba(16,185,129,.12)',fill:true,tension:.35,borderWidth:3,pointRadius:4,pointBackgroundColor:'#10b981'}]},
+    options:{plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,grid:{color:'#f0f1f7'}},x:{grid:{display:false}}}}});
+
+  new Chart(srcChart,{type:'polarArea',data:{labels:Object.keys(C.source),
+    datasets:[{data:Object.values(C.source),backgroundColor:PAL.map(c=>c+'cc'),borderWidth:0}]},
+    options:{plugins:{legend:{position:'bottom'}},scales:{r:{grid:{color:'#f0f1f7'},ticks:{display:false}}}}});
+</script>
+{% endif %}
+{% endblock %}

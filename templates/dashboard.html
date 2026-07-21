@@ -1,218 +1,99 @@
-<!DOCTYPE html>
-<html lang="en">
+{% extends 'base.html' %}
+{% block page_title %}Dashboard{% endblock %}
+{% block heading %}Hey {{ shell_user.name|default:"there" }} 👋{% endblock %}
+{% block subheading %}Here's your money at a glance.{% endblock %}
+{% block content %}
 
-<head>
-  <meta charset="UTF-8">
-  <title>Dashboard</title>
-  <!-- Bootstrap CSS -->
-  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-  <style>
-    /* Custom CSS for centering buttons */
-    .center-buttons {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-    }
-      .carousel-item {
-        text-align: center;
-      }
-      .carousel-item img {
-        max-height: 200px;
-        margin: auto;
-      }
-      .scheme-tile {
-        background-color: #f8f9fa;
-        border: 1px solid #ccc;
-        border-radius: 5px;
-        padding: 20px;
-        margin-bottom: 20px;
-      }
-      .invest-button {
-        text-align: center;
-        margin-top: 10px;
-      }
-  </style>
-</head>
-
-<body>
-  <!-- Navigation Bar -->
-  <nav class="navbar navbar-expand-lg navbar-light bg-light">
-    <a class="navbar-brand" href="#">TARA</a>
-    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav"
-      aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-      <span class="navbar-toggler-icon"></span>
-    </button>
-    <div class="collapse navbar-collapse" id="navbarNav">
-      <ul class="navbar-nav">
-        <li class="nav-item">
-          <a class="nav-link" href="/profile">Profile</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="/dashboard">Dashboard</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="/expense">Expense</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="/wallet">Wallet</a>
-        </li>
-      </ul>
+{% if not has_data %}
+  <div class="card empty">
+    <div class="big">🌱</div>
+    <h3>Let's bring your finances to life</h3>
+    <p class="muted mb">Add your first expense, or load a realistic sample stream to explore every feature instantly.</p>
+    <div style="display:flex;gap:12px;justify-content:center">
+      <a class="btn btn-primary" href="/load_sample">✨ Load sample data</a>
+      <a class="btn btn-ghost" href="/expenses">Add an expense</a>
     </div>
-  </nav>
+  </div>
+{% else %}
 
-  <div class="container mt-4">
-    <div class="row">
-      <!-- Left Column with Carousel -->
-      <div class="col-md-6">
-        <h4>Current Investments</h4>
-        <div class="row">
-          <div class="col">
-            
-            <div id="schemeCarousel" class="carousel slide" data-ride="carousel">
-              <div class="carousel-inner">
-                <ul style='list-style-type:none;'>
-                  {% for inv in Current_data %}
-                  <li>
-                <div class="carousel-item py-5 active align-items-center justify-content-center" style='height:300px'>
-                  
-                    <h5>{{ inv.name }}</h5>
-                    <p>Investment Amount: Rs. {{ inv.inv_amt }}</p>
-                    <p>Policy Term: {{ inv.tenure }}</p>
-                    <p>Investment Date: {{ inv.id }}</p>
-                  
-                </div>
-              </li>
-              {% endfor %}
-            </ul>
-               
-              </div>
-              <!-- Controls -->
-              <a class="carousel-control-prev" href="#schemeCarousel" role="button" data-slide="prev">
-                <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-                <span class="sr-only">Previous</span>
-              </a>
-              <a class="carousel-control-next" href="#schemeCarousel" role="button" data-slide="next">
-                <span class="carousel-control-next-icon" aria-hidden="true"></span>
-                <span class="sr-only">Next</span>
-              </a>
-            </div>
-          </div>
+  <!-- Stat row -->
+  <div class="grid g4">
+    <div class="card stat"><div class="icon" style="background:var(--success-050)">💰</div>
+      <span class="label">Auto-saved</span><span class="value">₹{{ savings_total }}</span>
+      <span class="meta">+ ₹{{ summary.spare_change_saved }} spare change</span></div>
+    <div class="card stat"><div class="icon" style="background:var(--info-050)">🧾</div>
+      <span class="label">Spent this month</span><span class="value">₹{{ summary.this_month_spent }}</span>
+      <span class="meta">{{ summary.tx_count }} transactions</span></div>
+    <div class="card stat"><div class="icon" style="background:var(--warn-050)">⚡</div>
+      <span class="label">Impulse buys</span><span class="value">{{ summary.impulse_count }}</span>
+      <span class="meta">this month</span></div>
+    <div class="card stat"><div class="icon" style="background:var(--primary-050)">🎭</div>
+      <span class="label">Money personality</span><span class="value" style="font-size:19px;margin-top:6px">{{ archetype.emoji }} {{ archetype.archetype }}</span>
+      <span class="meta"><a href="/personality" style="color:var(--primary)">See breakdown →</a></span></div>
+  </div>
+
+  <div class="grid g2 mt">
+    <!-- Goals -->
+    <div class="card">
+      <h3>🎯 Goal progress</h3>
+      <p class="card-sub">Every rupee saved moves these closer.</p>
+      {% for g in goals %}
+      <div class="mb">
+        <div style="display:flex;justify-content:space-between;font-size:14px;margin-bottom:6px">
+          <span>{{ g.emoji }} <b>{{ g.name }}</b></span>
+          <span class="muted">₹{{ g.saved_amount }} / ₹{{ g.target_amount }} · {{ g.pct }}%</span>
         </div>
+        <div class="prog"><span style="width:{{ g.pct }}%;background:var(--success)"></span></div>
       </div>
+      {% empty %}<p class="muted">No goals yet. <a href="/goals" style="color:var(--primary)">Add one →</a></p>{% endfor %}
+      <a class="btn btn-ghost btn-block mt" href="/goals">Manage goals</a>
+    </div>
 
-      <!-- Right Column with Form -->
-      <div class="col-md-6">
-        <h4>Add Investment</h4>
-        <form method='post'>
-          {% csrf_token %}
-          <div class="form-group">
-            <label for="schemeName">Scheme Name</label>
-            <select class="form-control" name='scheme_name' id="schemeName">
-              <option>Tata AIA Fortune Maxima </option>
-              <option>Bajaj Allianz Life LongLife Goal </option>
-              <option>HDFC Life Click 2 Wealth </option>
-              <option>Max Life Online Savings Plan </option>
-              <option>Edelweiss Life Tokio Wealth Secure Plus </option>
-              <option>ICICI Prudential Signature </option>
-              <option>Tata AIA Life Guaranteed Monthly Income Plan</option>
-              <option>Bajaj Allianz Pension Guaranteed Pension Plan</option>
-              <option>Max Life Forever Young Pension Plan</option>
-              <option>ICICI Pru Easy Retirement Plan</option>
-              <option>LIC Jeevan Akshay 7 Pension Plan </option>
-              <option>LIC New Jeevan Shanti Pension Plan </option>
-              <option>Max Life Guaranteed Lifetime Income Pension Plan </option>
-              <option>Aditya Birla Sun Life Empower Pension Plan </option>
-              <option>IndiaFirst Life Guaranteed Annuity Plan </option>
-              <option>Kotak Premier Pension Plan </option>
-              <option>SBI Life Saral Retirement Saver </option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label for="investmentAmount">Investment Amount</label>
-            <input type="text" name ='investment_amount' class="form-control" id="investmentAmount">
-          </div>
-          <div class="form-group">
-            <label for="rateOfInterest">Rate of Interest</label>
-            <input type="text" name = 'roi' class="form-control" id="rateOfInterest">
-          </div>
-          <button type="submit" class="btn btn-primary">Submit</button>
-        </form>
+    <!-- Nudges -->
+    <div class="card">
+      <h3>💡 Today's nudges</h3>
+      <p class="card-sub">Small moves, big momentum.</p>
+      <div class="rowlist">
+        {% for n in nudges %}
+        <div class="rowitem tone-{{ n.tone }}" style="padding-left:12px">
+          <div class="ric" style="background:var(--primary-050)">{{ n.icon }}</div>
+          <div style="font-size:14px">{{ n.text }}</div>
+        </div>
+        {% empty %}<p class="muted">You're all caught up. Keep it going! 🔥</p>{% endfor %}
       </div>
     </div>
   </div>
 
-  <div class="container mt-4">
-    <p style = 'color:#f4ac40'><h4>Best Suited For You</h4></p>
-    <div class="row">
-      <div class="col">
-        <ul class="list-inline" style='list-style-type:none;'>
-          {% for inv in Recommendation.Salary %}
-        <li>
-          <h5>{{inv.scheme_name}}</h5>
-                <p>Minimum Entry Age: {{inv.min_entry_age}}</p>
-                <p>Maximum Entry Age: {{inv.max_entry_age}}</p>
-                <p>Policy Term: {{inv.policy_term}}</p>
-                <p>Minimum Investment: Rs. {{inv.minimum_investment}}</p>
-                <p>Return Rate: {{inv.return_rate}}%</p>
-                <div class="invest-button">
-                  <a href="https://yourinvestmenturl.com" class="btn btn-primary">Invest</a>
-                </div>
-              </li>
-              {% endfor %}
-        </ul>
+  <div class="grid g2 mt">
+    <!-- Insights -->
+    <div class="card">
+      <h3>🔍 Top insights</h3>
+      <p class="card-sub">What your spending is telling us.</p>
+      <div class="rowlist">
+        {% for i in insights %}
+        <div class="rowitem">
+          <div class="ric" style="background:var(--warn-050)">{{ i.icon }}</div>
+          <div><b style="font-size:14px">{{ i.title }}</b><div class="muted" style="font-size:13px">{{ i.detail }}</div></div>
+        </div>
+        {% endfor %}
       </div>
+      <a class="btn btn-ghost btn-block mt" href="/intelligence">Full breakdown</a>
     </div>
 
-    <p style = 'color:#f4ac40'><h4>People Also Invested In </h4></p>
-    <div class="row">
-      <div class="col">
-        <ul class="list-inline" style='list-style-type:none;'>
-          {% for inv in Recommendation.Occupation %}
-        <li>
-          <h5>{{inv.scheme_name}}</h5>
-                <p>Minimum Entry Age: {{inv.min_entry_age}}</p>
-                <p>Maximum Entry Age: {{inv.max_entry_age}}</p>
-                <p>Policy Term: {{inv.policy_term}}</p>
-                <p>Minimum Investment: Rs. {{inv.minimum_investment}}</p>
-                <p>Return Rate: {{inv.return_rate}}%</p>
-                <div class="invest-button">
-                  <a href="https://yourinvestmenturl.com" class="btn btn-primary">Invest</a>
-                </div>
-              </li>
-              {% endfor %}
-        </ul>
+    <!-- Portfolio snapshot -->
+    <div class="card">
+      <h3>📊 Suggested portfolio</h3>
+      <p class="card-sub">Tuned to your profile & behaviour.</p>
+      {% for a in allocation %}
+      <div style="margin-bottom:12px">
+        <div style="display:flex;justify-content:space-between;font-size:14px;margin-bottom:5px">
+          <span><b>{{ a.label }}</b></span><span class="muted">{{ a.pct }}%</span></div>
+        <div class="prog"><span style="width:{{ a.pct }}%;background:{{ a.color }}"></span></div>
       </div>
+      {% endfor %}
+      <a class="btn btn-ghost btn-block mt" href="/portfolio">See rationale</a>
     </div>
-
-    <p style = 'color:#f4ac40'><h4>Recommended for your Age</h4></p>
-    <div class="row">
-      <div class="col">
-        <ul class="list-inline" style='list-style-type:none;'>
-          {% for inv in Recommendation.Age %}
-        <li>
-          <h5>{{inv.scheme_name}}</h5>
-                <p>Minimum Entry Age: {{inv.min_entry_age}}</p>
-                <p>Maximum Entry Age: {{inv.max_entry_age}}</p>
-                <p>Policy Term: {{inv.policy_term}}</p>
-                <p>Minimum Investment: Rs. {{inv.minimum_investment}}</p>
-                <p>Return Rate: {{inv.return_rate}}%</p>
-                <div class="invest-button">
-                  <a href="https://yourinvestmenturl.com" class="btn btn-primary">Invest</a>
-                </div>
-              </li>
-              {% endfor %}
-        </ul>
-      </div>
-    </div>
-
   </div>
 
-  <!-- Bootstrap JS, Popper.js, and jQuery -->
-  <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.10.2/dist/umd/popper.min.js"></script>
-  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-</body>
-
-</html>
- 
+{% endif %}
+{% endblock %}

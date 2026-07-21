@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ app_name }} · {% block page_title %}{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --primary:#6C5CE7; --primary-600:#5a4bd4; --primary-050:#efedfd;
+      --success:#10b981; --warn:#f59e0b; --danger:#ef4444;
+      --text:#1c1e2b; --muted:#7a7f96; --border:#ecedf4; --surface:#fff;
+      --radius:16px; --radius-sm:10px;
+    }
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:'Inter',system-ui,sans-serif;color:var(--text);line-height:1.5;
+      background:radial-gradient(1200px 600px at 15% -10%,#2b2350 0%,#171331 45%,#12102a 100%);min-height:100vh}
+    a{color:inherit;text-decoration:none}
+    .wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:32px}
+    .card{background:var(--surface);border-radius:22px;box-shadow:0 30px 80px rgba(0,0,0,.35);width:100%;max-width:460px;padding:38px}
+    .card.wide{max-width:720px}
+    .brand{display:flex;align-items:center;gap:10px;font-weight:800;font-size:22px;margin-bottom:6px}
+    .brand .logo{width:38px;height:38px;border-radius:11px;background:linear-gradient(135deg,#8b7bff,#6C5CE7);display:grid;place-items:center;font-size:20px}
+    .lead{color:var(--muted);font-size:14.5px;margin-bottom:26px}
+    h2{font-size:24px;font-weight:800;letter-spacing:-.02em}
+    .field{margin-bottom:14px}
+    .field label{display:block;font-size:13px;font-weight:600;margin-bottom:6px}
+    .field input,.field select{width:100%;padding:12px 14px;border:1px solid var(--border);border-radius:var(--radius-sm);font:inherit;font-size:14px;background:#fbfbfe}
+    .field input:focus,.field select:focus{outline:none;border-color:var(--primary);background:#fff;box-shadow:0 0 0 3px var(--primary-050)}
+    .row{display:grid;gap:14px}.row.c2{grid-template-columns:1fr 1fr}.row.c3{grid-template-columns:repeat(3,1fr)}
+    @media(max-width:560px){.row.c2,.row.c3{grid-template-columns:1fr}}
+    .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;font-weight:600;font-size:15px;padding:13px 18px;border-radius:var(--radius-sm);border:none;cursor:pointer;transition:.15s;width:100%}
+    .btn-primary{background:var(--primary);color:#fff}.btn-primary:hover{background:var(--primary-600)}
+    .alt{text-align:center;font-size:14px;color:var(--muted);margin-top:18px}
+    .alt a{color:var(--primary);font-weight:600}
+    .error{background:var(--danger);background:#fdecec;color:#c0392b;border:1px solid #f5c2c2;padding:11px 14px;border-radius:10px;font-size:13.5px;margin-bottom:18px}
+    .step-title{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--primary);margin:22px 0 12px}
+    .step-title:first-of-type{margin-top:6px}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    {% block content %}{% endblock %}
+  </div>
+</body>
+</html>

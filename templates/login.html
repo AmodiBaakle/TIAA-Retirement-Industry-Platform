@@ -1,68 +1,25 @@
-<!DOCTYPE html>
-<html lang="en">
+{% extends 'base_auth.html' %}
+{% block page_title %}Log in{% endblock %}
+{% block content %}
+<div class="card">
+  <div class="brand"><span class="logo">🪙</span><span>{{ app_name }}</span></div>
+  <h2>Welcome back</h2>
+  <p class="lead">Log in to pick up your saving streak.</p>
 
-<head>
-  <meta charset="UTF-8">
-  <title>Login</title>
-  <!-- Bootstrap CSS -->
-  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-  <style>
-    /* Custom CSS for centering buttons */
-    .center-buttons {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-    }
-  </style>
-</head>
+  {% if error %}<div class="error">{{ error }}</div>{% endif %}
 
-<body>
-
-  <!-- Navigation Bar -->
-  <nav class="navbar navbar-expand-lg navbar-light bg-light">
-    <a class="navbar-brand" href="#">TARA</a>
-    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav"
-      aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-      <span class="navbar-toggler-icon"></span>
-    </button>
-    <div class="collapse navbar-collapse" id="navbarNav">
-      <ul class="navbar-nav">
-        <li class="nav-item">
-          <a class="nav-link" href="/profile">Profile</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="/dashboard">Dashboard</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="/expense">Expense</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="/wallet">Wallet</a>
-        </li>
-      </ul>
+  <form method="post" action="/login">
+    {% csrf_token %}
+    <div class="field">
+      <label>Email</label>
+      <input type="email" name="mail" placeholder="you@email.com" required>
     </div>
-  </nav>
-
-  <div class="container">
-    <form method = 'post'>
-      {% csrf_token %}
-      <div class="form-group">
-        <label for="name">Email ID</label>
-        <input type="text" class="form-control" id="mail" name="mail" required>
-      </div>
-      <div class="form-group">
-        <label for="age">Password</label>
-        <input type="text" class="form-control" id="pwd" name="pwd" required>
-      </div>
-      <button type="submit" class="btn btn-primary">Submit</button>
-    </form>
-  </div>
-
-  <!-- Bootstrap JS, Popper.js, and jQuery -->
-  <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.10.2/dist/umd/popper.min.js"></script>
-  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-</body>
-
-</html>
+    <div class="field">
+      <label>Password</label>
+      <input type="password" name="pwd" placeholder="Your password" required>
+    </div>
+    <button class="btn btn-primary" type="submit">Log in</button>
+  </form>
+  <p class="alt">New here? <a href="/enter_info">Create an account</a></p>
+</div>
+{% endblock %}

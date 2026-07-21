@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+{% block page_title %}Expenses{% endblock %}
+{% block heading %}Expenses{% endblock %}
+{% block subheading %}Add a payment — it's categorised, rounded off, and saved instantly.{% endblock %}
+{% block content %}
+
+{% if nudge %}
+<div class="card tone-{{ nudge.tone }} mb" style="display:flex;align-items:center;gap:14px">
+  <div style="font-size:26px">{{ nudge.icon }}</div>
+  <div><b>Nudge</b><div style="font-size:14px">{{ nudge.text }}</div></div>
+</div>
+{% endif %}
+
+<div class="grid g3">
+  <div class="card stat"><span class="label">Total spent</span><span class="value">₹{{ total_spent }}</span></div>
+  <div class="card stat"><span class="label">Spare change saved</span><span class="value" style="color:var(--success)">₹{{ total_saved }}</span></div>
+  <div class="card stat"><span class="label">Transactions</span><span class="value">{{ count }}</span></div>
+</div>
+
+<div class="grid mt" style="grid-template-columns:340px 1fr">
+  <!-- Add expense -->
+  <div class="card" style="align-self:start">
+    <h3>➕ Add an expense</h3>
+    <p class="card-sub">We'll auto-detect the category.</p>
+    <form method="post" action="/expenses">
+      {% csrf_token %}
+      <div class="field"><label>Merchant / description</label><input name="name" placeholder="Swiggy, Amazon, Uber…" required></div>
+      <div class="field"><label>Amount (₹)</label><input type="number" name="transaction_amount" placeholder="450" required></div>
+      <button class="btn btn-primary btn-block" type="submit">Add expense</button>
+    </form>
+  </div>
+
+  <!-- Transaction list -->
+  <div class="card">
+    <h3>Recent activity</h3>
+    <p class="card-sub">Newest first.</p>
+    {% if txns %}
+    <table>
+      <thead><tr><th>Merchant</th><th>Category</th><th>Source</th><th>When</th><th style="text-align:right">Amount</th><th style="text-align:right">Saved</th></tr></thead>
+      <tbody>
+        {% for t in txns %}
+        <tr>
+          <td><b>{{ t.transaction_name }}</b>{% if t.is_impulse %} <span class="chip warn">impulse</span>{% endif %}{% if t.is_subscription %} <span class="chip info">sub</span>{% endif %}</td>
+          <td><span class="chip">{{ t.expense_category }}</span></td>
+          <td class="muted">{{ t.source }}</td>
+          <td class="muted">{{ t.timestamp|date:"d M, H:i" }}</td>
+          <td style="text-align:right;font-weight:600">₹{{ t.transaction_amount }}</td>
+          <td style="text-align:right;color:var(--success)">+₹{{ t.rounded_off_amount }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <div class="empty"><div class="big">🧾</div><p>No transactions yet. Add one on the left, or <a href="/load_sample" style="color:var(--primary)">load sample data</a>.</p></div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

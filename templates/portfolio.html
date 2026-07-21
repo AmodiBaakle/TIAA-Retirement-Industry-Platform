@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+{% block page_title %}Portfolio{% endblock %}
+{% block heading %}📊 AI Portfolio{% endblock %}
+{% block subheading %}Driven by your finances AND your behaviour — not a one-size-fits-all robo-advisor.{% endblock %}
+{% block content %}
+
+<div class="grid g2">
+  <div class="card">
+    <h3>Recommended allocation</h3>
+    <p class="card-sub">Equity tilt: {{ equity_appetite }}%</p>
+    <canvas id="allocChart" height="240"></canvas>
+  </div>
+
+  <div class="card">
+    <h3>Why this mix?</h3>
+    <p class="card-sub">The logic behind your allocation.</p>
+    <div class="rowlist mb">
+      {% for r in rationale %}
+      <div class="rowitem"><div class="ric" style="background:var(--primary-050)">💡</div><div style="font-size:14px">{{ r }}</div></div>
+      {% endfor %}
+    </div>
+    {% for a in allocation %}
+    <div style="margin-bottom:10px">
+      <div style="display:flex;justify-content:space-between;font-size:13.5px;margin-bottom:4px">
+        <span><span style="display:inline-block;width:10px;height:10px;border-radius:3px;background:{{ a.color }};margin-right:7px"></span>{{ a.label }}</span>
+        <span class="muted">{{ a.pct }}%</span></div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+
+<div class="section-title">Suggested schemes</div>
+<div class="grid g3">
+  {% for s in schemes %}
+  <div class="card">
+    <b style="font-size:14px">{{ s.scheme_name }}</b>
+    <div class="muted" style="font-size:13px;margin:8px 0">Return: {{ s.return_rate }}% · Min ₹{{ s.minimum_investment }}</div>
+    <form method="post" action="/portfolio">
+      {% csrf_token %}
+      <input type="hidden" name="scheme_name" value="{{ s.scheme_name }}">
+      <input type="hidden" name="roi" value="{{ s.return_rate }}">
+      <div class="field"><input type="number" name="investment_amount" placeholder="Amount ₹" required></div>
+      <button class="btn btn-ghost btn-block" type="submit">Invest</button>
+    </form>
+  </div>
+  {% empty %}<p class="muted">No scheme suggestions available.</p>{% endfor %}
+</div>
+
+{% if investments %}
+<div class="section-title">Your investments</div>
+<div class="card">
+  <table>
+    <thead><tr><th>Scheme</th><th style="text-align:right">Amount</th><th style="text-align:right">Rate</th></tr></thead>
+    <tbody>{% for i in investments %}<tr><td>{{ i.scheme_name }}</td><td style="text-align:right">₹{{ i.investment_amount }}</td><td style="text-align:right">{{ i.rate_of_interest }}%</td></tr>{% endfor %}</tbody>
+  </table>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+  Chart.defaults.font.family='Inter'; Chart.defaults.color='#7a7f96';
+  const A = JSON.parse('{{ alloc_json|escapejs }}');
+  new Chart(allocChart,{type:'doughnut',data:{labels:A.map(x=>x.label),
+    datasets:[{data:A.map(x=>x.pct),backgroundColor:A.map(x=>x.color),borderWidth:0}]},
+    options:{plugins:{legend:{position:'bottom'}},cutout:'60%'}});
+</script>
+{% endblock %}

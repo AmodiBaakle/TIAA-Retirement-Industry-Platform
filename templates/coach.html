@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+{% block page_title %}Coach{% endblock %}
+{% block heading %}🧠 AI Financial Coach{% endblock %}
+{% block subheading %}Your weekly report — this week vs last.{% endblock %}
+{% block content %}
+
+<div class="grid g4">
+  {% for m in metrics %}
+  <div class="card stat">
+    <span class="label">{{ m.label }}</span>
+    <span class="value">{{ m.value }}</span>
+    {% if m.delta_pct is not None %}
+      <span class="chip {% if m.good %}good{% else %}danger{% endif %}" style="align-self:flex-start;margin-top:4px">
+        {% if m.direction == 'up' %}▲{% else %}▼{% endif %} {{ m.delta_pct }}%
+      </span>
+    {% else %}
+      <span class="meta">right now</span>
+    {% endif %}
+  </div>
+  {% endfor %}
+</div>
+
+<div class="section-title">Recommendations</div>
+<div class="card">
+  <div class="rowlist">
+    {% for r in recommendations %}
+    <div class="rowitem"><div class="ric" style="background:var(--success-050)">✅</div><div style="font-size:14.5px">{{ r }}</div></div>
+    {% empty %}<p class="muted">You're doing great — no action items this week. 🎉</p>{% endfor %}
+  </div>
+</div>
+{% endblock %}

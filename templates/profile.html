@@ -1,127 +1,41 @@
-<!DOCTYPE html>
-<html lang="en">
+{% extends 'base.html' %}
+{% block page_title %}Profile{% endblock %}
+{% block heading %}👤 Profile{% endblock %}
+{% block subheading %}Your financial and behavioural profile.{% endblock %}
+{% block content %}
 
-<head>
-  <meta charset="UTF-8">
-  <title>Profile</title>
-  <!-- Bootstrap CSS -->
-  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-  <style>
-    /* Custom CSS for centering buttons */
-    .center-buttons {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-    }
-
-    .card {
-      margin-bottom: 20px;
-    }
-    .card-container {
-      margin-top: 20px;
-    }
-  </style>
-</head>
-
-<body>
-  <!-- Navigation Bar -->
-  <nav class="navbar navbar-expand-lg navbar-light bg-light">
-    <a class="navbar-brand" href="#">TARA</a>
-    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav"
-      aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-      <span class="navbar-toggler-icon"></span>
-    </button>
-    <div class="collapse navbar-collapse" id="navbarNav">
-      <ul class="navbar-nav">
-        <li class="nav-item">
-          <a class="nav-link" href="/profile">Profile</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="/dashboard">Dashboard</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="/expense">Expense</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="/wallet">Wallet</a>
-        </li>
-      </ul>
-    </div>
-  </nav>
-
-  <div class="container mt-4">
-    <!-- Centered buttons for Register and Login -->
-    <h1>Welcome {{Data.name}}!</h1>
-    
-    <div class="row card-container">
-      <div class="col-md-6">
-        <!-- Email ID Card -->
-        <div class="card">
-          <div class="card-body">
-            <h5 class="card-title">Email ID</h5>
-            <p class="card-text">{{Data.mail}}</p>
-          </div>
-        </div>
-
-        <!-- Date of Birth Card -->
-        <div class="card">
-          <div class="card-body">
-            <h5 class="card-title">Date of Birth</h5>
-            <p class="card-text">{{Data.dob}}</p>
-          </div>
-        </div>
-
-        <!-- Work Class Card -->
-        <div class="card">
-          <div class="card-body">
-            <h5 class="card-title">Work Class</h5>
-            <p class="card-text"> {{Data.wc}} </p>
-          </div>
-        </div>
-
-        <!-- Marital Status Card -->
-        <div class="card">
-          <div class="card-body">
-            <h5 class="card-title">Marital Status</h5>
-            <p class="card-text"> {{Data.ms}} </p>
-          </div>
-        </div>
-      </div>
-      <div class="col-md-6">
-        <!-- Occupation Card -->
-        <div class="card">
-          <div class="card-body">
-            <h5 class="card-title">Occupation</h5>
-            <p class="card-text"> {{Data.occ}} </p>
-          </div>
-        </div>
-
-        <!-- Gender Card -->
-        <div class="card">
-          <div class="card-body">
-            <h5 class="card-title">Gender</h5>
-            <p class="card-text"> {{Data.gender}}</p>
-          </div>
-        </div>
-
-        <!-- Salary Card -->
-        <div class="card">
-          <div class="card-body">
-            <h5 class="card-title">Income</h5>
-            <p class="card-text">Rs. {{Data.salary}}</p>
-          </div>
-        </div>
-      </div>
-    </div>
-
+<div class="card" style="display:flex;align-items:center;gap:18px;margin-bottom:18px">
+  <div class="avatar" style="width:64px;height:64px;font-size:26px">{{ p.name|slice:":1"|upper }}</div>
+  <div>
+    <h2 style="font-size:22px">{{ p.name }}</h2>
+    <div class="muted">{{ p.mail }}</div>
+    <div class="chip" style="margin-top:8px">{{ behavior.emoji }} {{ behavior.archetype }}</div>
   </div>
+  <a class="btn btn-ghost right" href="/logout">Log out</a>
+</div>
 
-  <!-- Bootstrap JS, Popper.js, and jQuery -->
-  <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.10.2/dist/umd/popper.min.js"></script>
-  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-</body>
-
-</html>
- 
+<div class="grid g2">
+  <div class="card">
+    <h3>About you</h3>
+    <table class="mt">
+      <tr><td class="muted">Age</td><td style="text-align:right"><b>{{ p.age }}</b></td></tr>
+      <tr><td class="muted">City</td><td style="text-align:right"><b>{{ p.city|default:"—" }}</b></td></tr>
+      <tr><td class="muted">Profession</td><td style="text-align:right"><b>{{ p.occupation|default:"—" }}</b></td></tr>
+      <tr><td class="muted">Work class</td><td style="text-align:right"><b>{{ p.work_class }}</b></td></tr>
+      <tr><td class="muted">Marital status</td><td style="text-align:right"><b>{{ p.marital_status }}</b></td></tr>
+      <tr><td class="muted">Gender</td><td style="text-align:right"><b>{{ p.gender|default:"—" }}</b></td></tr>
+    </table>
+  </div>
+  <div class="card">
+    <h3>Finances (monthly)</h3>
+    <table class="mt">
+      <tr><td class="muted">Salary</td><td style="text-align:right"><b>₹{{ p.salary }}</b></td></tr>
+      <tr><td class="muted">Fixed expenses</td><td style="text-align:right"><b>₹{{ p.fixed_expenses }}</b></td></tr>
+      <tr><td class="muted">Savings goal</td><td style="text-align:right"><b>₹{{ p.monthly_savings_goal }}</b></td></tr>
+      <tr><td class="muted">Existing investments</td><td style="text-align:right"><b>₹{{ p.existing_investments }}</b></td></tr>
+      <tr><td class="muted">Debt</td><td style="text-align:right"><b>₹{{ p.debt }}</b></td></tr>
+      <tr><td class="muted">Risk appetite</td><td style="text-align:right"><span class="chip info">{{ p.risk_appetite }}</span></td></tr>
+    </table>
+  </div>
+</div>
+{% endblock %}

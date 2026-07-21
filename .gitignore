@@ -1,0 +1,31 @@
+# Python cache files and directories
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+*.egg
+.pycache/
+*/__pycache__/
+**/__pycache__/
+*/*.pyc
+*/*.pyd
+*/*.pyo
+*/*.pdb
+
+# Virtual environments (project uses the base conda environment)
+.venv/
+venv/
+env/
+
+# Runtime / server
+*.log
+gunicorn.ctl
+gunicorn.pid
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

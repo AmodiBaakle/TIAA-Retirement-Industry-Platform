@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+{% block page_title %}Challenges{% endblock %}
+{% block heading %}🏆 Challenges & Rewards{% endblock %}
+{% block subheading %}Saving, but make it a game.{% endblock %}
+{% block content %}
+
+<!-- Level / XP / streak -->
+<div class="grid g3">
+  <div class="card stat"><span class="label">Level</span><span class="value">{{ state.level }}</span>
+    <div class="prog mt"><span style="width:{{ state.pct }}%"></span></div>
+    <span class="meta">{{ state.xp_into }}/{{ state.xp_needed }} XP to next level</span></div>
+  <div class="card stat"><span class="label">Total XP</span><span class="value">{{ state.xp }}</span><span class="meta">keep earning</span></div>
+  <div class="card stat"><span class="label">Saving streak</span><span class="value">🔥 {{ state.streak }}</span><span class="meta">days in a row</span></div>
+</div>
+
+<div class="grid g2 mt">
+  <!-- Challenges -->
+  <div class="card">
+    <h3>This week's challenges</h3>
+    <p class="card-sub">Complete them for XP and badges.</p>
+    {% for c in challenges %}
+    <div class="mb">
+      <div style="display:flex;justify-content:space-between;font-size:14px;margin-bottom:6px">
+        <span>{{ c.emoji }} <b>{{ c.title }}</b></span>
+        <span class="muted">{% if c.done %}<span class="chip good">done ✓</span>{% else %}{{ c.progress }}/{{ c.target }}{% endif %}</span>
+      </div>
+      <div class="prog"><span style="width:{{ c.pct }}%;background:{% if c.done %}var(--success){% else %}var(--primary){% endif %}"></span></div>
+    </div>
+    {% endfor %}
+  </div>
+
+  <!-- Leaderboard -->
+  <div class="card">
+    <h3>Leaderboard</h3>
+    <p class="card-sub">Friendly competition keeps you honest.</p>
+    <table>
+      <thead><tr><th>#</th><th>Saver</th><th style="text-align:right">Level</th><th style="text-align:right">XP</th></tr></thead>
+      <tbody>
+        {% for u in leaderboard %}
+        <tr>
+          <td><b>{{ u.rank }}</b>{% if u.rank == 1 %} 👑{% endif %}</td>
+          <td>{{ u.name }}</td>
+          <td style="text-align:right"><span class="chip">Lv {{ u.level }}</span></td>
+          <td style="text-align:right;font-weight:600">{{ u.xp }}</td>
+        </tr>
+        {% empty %}<tr><td colspan="4" class="muted">No players yet.</td></tr>{% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Badges -->
+<div class="section-title">Badges</div>
+<div class="grid g4">
+  {% for b in badges %}
+  <div class="card" style="text-align:center;{% if not b.earned %}opacity:.45{% endif %}">
+    <div style="font-size:38px">{{ b.emoji }}</div>
+    <b style="font-size:14px">{{ b.label }}</b>
+    <p class="muted" style="font-size:12.5px;margin-top:4px">{{ b.desc }}</p>
+    {% if b.earned %}<div class="chip good" style="margin-top:8px">Earned</div>{% else %}<div class="chip" style="margin-top:8px;background:#f0f0f6;color:var(--muted)">Locked</div>{% endif %}
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}

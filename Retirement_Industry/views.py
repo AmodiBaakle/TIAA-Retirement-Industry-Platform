@@ -1,142 +1,272 @@
-from django.shortcuts import render, redirect, HttpResponse
-from Retirement_Industry.models import Profile_Info, Transaction_History, Current_Investment
+import json
+import os
+
+import pandas as pd
+from django.core.management import call_command
+from django.db import IntegrityError
+from django.shortcuts import render, redirect
+from django.utils import timezone
+
+from Retirement_Industry.models import (
+    Profile_Info, Transaction_History, Current_Investment, Goal,
+)
 from Retirement_Industry.auto_roundoff import main as am
 from Retirement_Industry.expense_category import main as cm
 from Retirement_Industry.personalized_recommendation import main as pm
-import pandas as pd
-from django.utils import timezone
-import os
+from Retirement_Industry import (
+    expense_intelligence, behavior_detection, goal_engine, nudge_engine,
+    gamification, smart_savings, portfolio_ai, financial_coach,
+)
 
+
+def _pid(request):
+    return request.session.get('pid')
+
+
+# ------------------------------------------------------------------ auth
 def index(request):
-    if request.method == 'POST':
-        print('login' in request.POST)
-        if 'login' in request.POST:
-            return redirect('/login')
-        else: 
-            return redirect('/enter_info')
-    return render(request, 'index.html')
+    if _pid(request):
+        return redirect('/dashboard')
+    return render(request, 'landing.html')
+
 
 def enter_info(request):
-    if request.method == 'GET':
-        global mail
-        mail = request.GET.get('mail')
-        if mail:
-            p_name = request.GET.get('name')
-            age = str(request.GET.get('age'))
-            wc = request.GET.get('work_class')
-            ms = request.GET.get('marital_status')
-            occ = request.GET.get('occupation')
-            gender = request.GET.get('gender')
-            salary = int(request.GET.get('salary'))
-            pwd = request.GET.get('password')
-            details = Profile_Info(name = p_name, mail = mail, age = age, work_class = wc, marital_status = ms, occupation = occ, gender = gender, salary = salary, password = pwd)
-            details.save()
-            return redirect('/dashboard')
-        else:
-            return render(request, 'enter_info.html')
+    if request.method == 'POST':
+        mail = request.POST.get('mail')
+        if Profile_Info.objects.filter(mail=mail).exists():
+            return render(request, 'register.html',
+                          {'error': 'An account with %s already exists. Please log in.' % mail,
+                           'data': request.POST})
+        try:
+            person = Profile_Info.objects.create(
+                name=request.POST.get('name'), mail=mail,
+                password=request.POST.get('password'),
+                age=str(request.POST.get('age') or ''),
+                city=request.POST.get('city') or '',
+                occupation=request.POST.get('occupation') or '',
+                work_class=request.POST.get('work_class') or 'Private',
+                marital_status=request.POST.get('marital_status') or 'Single',
+                gender=request.POST.get('gender') or '',
+                salary=int(request.POST.get('salary') or 0),
+                fixed_expenses=int(request.POST.get('fixed_expenses') or 0),
+                existing_investments=int(request.POST.get('existing_investments') or 0),
+                debt=int(request.POST.get('debt') or 0),
+                risk_appetite=request.POST.get('risk_appetite') or 'Medium',
+                monthly_savings_goal=int(request.POST.get('monthly_savings_goal') or 0),
+            )
+        except IntegrityError:
+            return render(request, 'register.html',
+                          {'error': 'An account with %s already exists. Please log in.' % mail})
+
+        # optional first goal
+        gname = request.POST.get('goal_name')
+        if gname:
+            Goal.objects.create(
+                person_id=person.person_id, name=gname, emoji=request.POST.get('goal_emoji') or '🎯',
+                target_amount=int(request.POST.get('goal_amount') or 0),
+                target_months=int(request.POST.get('goal_months') or 0),
+                tier='major')
+
+        request.session['pid'] = person.person_id
+        request.session['mail'] = mail
+        return redirect('/dashboard')
+    return render(request, 'register.html', {'data': {}})
+
 
 def login(request):
     if request.method == 'POST':
-        global mail
         mail = request.POST.get('mail')
-        entered_password = request.POST.get('pwd')
-        pwd = (Profile_Info.objects.get(mail = mail)).password
-        if pwd == entered_password:
+        pwd = request.POST.get('pwd')
+        people = Profile_Info.objects.filter(mail=mail).order_by('-person_id')
+        if not people:
+            return render(request, 'login.html', {'error': 'No account found for that email.'})
+        match = next((p for p in people if p.password == pwd), None)
+        if match:
+            request.session['pid'] = match.person_id
+            request.session['mail'] = mail
             return redirect('/dashboard')
+        return render(request, 'login.html', {'error': 'Incorrect password.'})
     return render(request, 'login.html')
 
-def pay(request):
-    global mail
-    try: 
-        pid = (Profile_Info.objects.get(mail = mail)).person_id
-        if request.method == 'POST':
-            pid = (Profile_Info.objects.get(mail = mail)).person_id
-            name = request.POST.get('name')
-            ta = int(request.POST.get('transaction_amount'))
-            category = cm(name, ta)
-            rm = am(name, ta, category)
-            details = Transaction_History(person_id=pid, transaction_name = name, transaction_amount = ta, expense_category=category, rounded_off_amount = rm)
-            details.save()
-            return redirect('/wallet')
-        return render(request, 'pay.html')
-    except Exception as e:
-        print(e) 
-        return redirect('/')
 
+def logout(request):
+    request.session.flush()
+    return redirect('/')
+
+
+def load_sample(request):
+    """Populate the current user with a synthetic transaction stream + goals."""
+    pid = _pid(request)
+    if not pid:
+        return redirect('/')
+    call_command('seed_transactions', '--pid', str(pid), '--clear', '--goals', '--days', '75')
+    behavior_detection.detect(pid)
+    return redirect('/dashboard')
+
+
+# ------------------------------------------------------------------ app pages
 def dashboard(request):
-    global mail
-    try:
-        pid = (Profile_Info.objects.get(mail = mail)).person_id
-        df = pd.read_csv(os.getcwd() + '\\static\\Schemes.csv', encoding='unicode_escape')
-        context = dict()
-        if request.method == 'POST':
-            scheme_name = request.POST.get('scheme_name')
-            inv_amt = str(request.POST.get('investment_amount'))
-            roi = request.POST.get('roi')
-            print(scheme_name)
-            for index, row in df.iterrows():
-                try: 
-                    if scheme_name in row['Pension_Plans_in_India']:
-                        pt = row.Policy_Term
-                except: pt = 'Not Applicable'
-            details = Current_Investment(person_id = pid, scheme_name = scheme_name, investment_amount = inv_amt, policy_term = pt, date_of_investment = str(timezone.now()),rate_of_interest = roi)
-            details.save()
+    pid = _pid(request)
+    if not pid:
+        return redirect('/')
+    intel = expense_intelligence.generate_insights(pid)
+    goals = goal_engine.goal_progress(pid)
+    savings = smart_savings.savings_summary(pid)
+    portfolio = portfolio_ai.recommend_allocation(pid)
+    ctx = {
+        'summary': intel['summary'],
+        'insights': intel['insights'][:3],
+        'goals': goals[:3],
+        'nudges': nudge_engine.daily_nudges(pid),
+        'savings_total': savings['total'],
+        'archetype': behavior_detection.detect(pid),
+        'allocation': portfolio['allocation'],
+        'has_data': intel['summary'] != {},
+    }
+    return render(request, 'dashboard.html', ctx)
 
-        context['Current_data'] = []
-        try:
-            current_inv = (Current_Investment.objects.filter(person_id = pid))
-            for row in current_inv:
-                data = dict()
-                data['name'] = row.scheme_name
-                data['inv_amt'] = row.investment_amount
-                data['tenure'] = row.policy_term
-                data['id'] = row.date_of_investment
-                context['Current_data'].append(data)     
-        except Exception as e:
-            print("inner: ", e)
-            context['Current_data'].append({'name':'No Schemes', 'inv_amt':'-', 'tenure':'-', 'id':'-'})
-        context['Recommendation'] = pm(pid)
 
-        return render(request, 'dashboard.html', context)
-    except Exception as e:
-        print('outer: ', e) 
+def expenses(request):
+    """Merged add-expense + transaction history on a single page."""
+    pid = _pid(request)
+    if not pid:
         return redirect('/')
 
-def wallet(request):
-    global mail
+    if request.method == 'POST':
+        name = request.POST.get('name')
+        try:
+            ta = int(request.POST.get('transaction_amount'))
+        except (TypeError, ValueError):
+            return redirect('/expenses')
+        category = cm(name, ta)
+        rm = am(name, ta, category)
+        Transaction_History.objects.create(
+            person_id=pid, transaction_name=name, transaction_amount=ta,
+            expense_category=category, rounded_off_amount=rm,
+            timestamp=timezone.now(), source='Manual', merchant=name)
+        smart_savings.apply_savings(pid, rm)
+        gamification.record_activity(pid)
+        gamification.award_xp(pid, 10, 'Logged an expense')
+        request.session['last_nudge'] = nudge_engine.purchase_nudge(pid, ta, name)
+        return redirect('/expenses')
+
+    txns = Transaction_History.objects.filter(person_id=pid).order_by('-timestamp', '-transaction_id')
+    rows, total_spent, total_saved = [], 0, 0
+    for t in txns:
+        total_spent += t.transaction_amount
+        total_saved += t.rounded_off_amount
+        rows.append(t)
+    ctx = {
+        'txns': rows,
+        'total_spent': total_spent,
+        'total_saved': total_saved,
+        'count': len(rows),
+        'nudge': request.session.pop('last_nudge', None),
+    }
+    return render(request, 'expenses.html', ctx)
+
+
+def intelligence(request):
+    pid = _pid(request)
+    if not pid:
+        return redirect('/')
+    intel = expense_intelligence.generate_insights(pid)
+    ctx = {
+        'summary': intel['summary'],
+        'insights': intel['insights'],
+        'charts_json': json.dumps(intel['charts']),
+        'has_data': bool(intel['insights']),
+    }
+    return render(request, 'intelligence.html', ctx)
+
+
+def personality(request):
+    pid = _pid(request)
+    if not pid:
+        return redirect('/')
+    return render(request, 'personality.html', {'profile': behavior_detection.detect(pid)})
+
+
+def goals(request):
+    pid = _pid(request)
+    if not pid:
+        return redirect('/')
+    if request.method == 'POST':
+        name = request.POST.get('name')
+        if name:
+            Goal.objects.create(
+                person_id=pid, name=name, emoji=request.POST.get('emoji') or '🎯',
+                target_amount=int(request.POST.get('target_amount') or 0),
+                target_months=int(request.POST.get('target_months') or 0),
+                saved_amount=int(request.POST.get('saved_amount') or 0),
+                tier=request.POST.get('tier') or 'major')
+        return redirect('/goals')
+    ctx = {
+        'goals': goal_engine.goal_progress(pid),
+        'capacity': goal_engine.monthly_savings_capacity(pid),
+    }
+    return render(request, 'goals.html', ctx)
+
+
+def challenges(request):
+    pid = _pid(request)
+    if not pid:
+        return redirect('/')
+    ctx = {
+        'state': gamification.get_state(pid),
+        'badges': gamification.evaluate_badges(pid),
+        'challenges': gamification.active_challenges(pid),
+        'leaderboard': gamification.leaderboard(10),
+    }
+    return render(request, 'challenges.html', ctx)
+
+
+def portfolio(request):
+    pid = _pid(request)
+    if not pid:
+        return redirect('/')
+
+    if request.method == 'POST':
+        scheme_name = request.POST.get('scheme_name')
+        inv_amt = request.POST.get('investment_amount') or 0
+        roi = request.POST.get('roi') or 0
+        Current_Investment.objects.create(
+            person_id=pid, scheme_name=scheme_name, investment_amount=inv_amt,
+            policy_term='Not Applicable', date_of_investment=str(timezone.now()),
+            rate_of_interest=roi)
+        return redirect('/portfolio')
+
+    rec = portfolio_ai.recommend_allocation(pid)
     try:
-        pid = (Profile_Info.objects.get(mail = mail)).person_id
-        transaction_details = (Transaction_History.objects.filter(person_id = pid))
-        context = dict()
-        save = 0
-        for i in transaction_details:
-            save+= i.rounded_off_amount
-        context['Savings'] = save
-        context['Data'] = []
-        for row in transaction_details:
-            data = dict()
-            data['tn'] = row.transaction_name
-            data['ta'] = row.transaction_amount
-            data['ec'] = row.expense_category
-            data['ro'] = row.rounded_off_amount
-            context['Data'].append(data)     
-        print(context)
-        return render(request, 'wallet.html', context)
-    except: return redirect('/')
+        schemes = pm(pid)
+    except Exception:
+        schemes = {}
+    investments = Current_Investment.objects.filter(person_id=pid)
+    ctx = {
+        'allocation': rec['allocation'],
+        'equity_appetite': rec['equity_appetite'],
+        'rationale': rec['rationale'],
+        'drivers': rec['drivers'],
+        'alloc_json': json.dumps([{'label': a['label'], 'pct': a['pct'], 'color': a['color']}
+                                  for a in rec['allocation']]),
+        'schemes': schemes.get('Salary', [])[:3] if schemes else [],
+        'investments': investments,
+    }
+    return render(request, 'portfolio.html', ctx)
+
+
+def coach(request):
+    pid = _pid(request)
+    if not pid:
+        return redirect('/')
+    return render(request, 'coach.html', financial_coach.weekly_report(pid))
+
 
 def profile(request):
-    global mail
-    try:
-        person_data = Profile_Info.objects.get(mail = mail)
-        data = dict()
-        data['name'] = person_data.name
-        data['mail'] = person_data.mail
-        data['dob'] = person_data.age
-        data['wc'] = person_data.work_class
-        data['ms'] = person_data.marital_status
-        data['occ'] = person_data.occupation
-        data['gender'] = person_data.gender
-        data['salary'] = person_data.salary
-        context = {'Data': data}
-        return render(request, 'profile.html', context)
-    except: return redirect('/')
+    pid = _pid(request)
+    if not pid:
+        return redirect('/')
+    person = Profile_Info.objects.filter(person_id=pid).first()
+    if not person:
+        return redirect('/')
+    return render(request, 'profile.html', {'p': person, 'behavior': behavior_detection.detect(pid)})
